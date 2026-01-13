@@ -268,6 +268,94 @@ For EVERY chart/visualization, verify:
 4. Check axis scales aren't misleading (truncated, inverted)
 5. Verify chart type is appropriate for data
 
+#### 4.11 Cross-Slide Consistency Matrix
+
+**Build a tracking table for metrics that appear multiple times.**
+
+The same metric MUST appear identically in:
+- Executive summary slide
+- Detail slides
+- Client email
+- Appendix
+
+**Create This Matrix:**
+
+| Metric | Exec Summary | Slide 3 | Slide 5 | Email | Source | Match? |
+|--------|--------------|---------|---------|-------|--------|--------|
+| Total N | 78 | 78 | 78 | 78 | metrics.json | ✓ |
+| Response Rate | 3.9% | 3.9% | 3.9% | 3.9% | calculated | ✓ |
+| NPS | +59 | +59 | +61 | +59 | script | ❌ |
+| Top Issue | Late arrivals | Late arrivals | Poor comm | Late arrivals | data | ❌ |
+
+**Red Flags:**
+```
+❌ NPS shows +59 in summary but +61 on Slide 5
+   Problem: Slide 5 may have been updated independently
+
+❌ "Top issue" changes from "Late arrivals" to "Poor communication"
+   Problem: Inconsistent ranking across slides
+
+❌ Email says "78 responses" but presentation says "80 responses"
+   Problem: Email drafted before final data update
+```
+
+**Verification Rules:**
+- [ ] Every metric in executive summary matches detail slides
+- [ ] Email findings match presentation exactly
+- [ ] Appendix data matches main presentation
+- [ ] Slide references are accurate ("See Slide 5" → Slide 5 has that content)
+- [ ] "Key finding" bullets match the charts they reference
+
+---
+
+## RED FLAGS: Stop and Escalate Immediately
+
+**If you encounter ANY of these, HALT the audit and alert the user before continuing.**
+
+These are not warnings - they indicate fundamental problems that must be resolved.
+
+### Impossible Values
+| Red Flag | Why It's Critical |
+|----------|-------------------|
+| Percentage > 100% | Mathematically impossible |
+| Percentage < 0% | Mathematically impossible |
+| Negative count | Can't have -5 customers |
+| NPS outside -100 to +100 | Invalid NPS range |
+| Average outside scale (e.g., 6.2/5.0) | Impossible on scale |
+| Response rate > 50% | Suspiciously high, verify methodology |
+
+### Data Integrity Failures
+| Red Flag | Why It's Critical |
+|----------|-------------------|
+| Sum of parts ≠ whole (>2% variance) | Fundamental math error |
+| Same metric, different values | Data integrity compromised |
+| Source file doesn't exist | Analysis references missing data |
+| Row count mismatch | Stale or wrong data |
+
+### Presentation-Breaking Issues
+| Red Flag | Why It's Critical |
+|----------|-------------------|
+| Executive summary metric is wrong | First thing client sees |
+| Chart contradicts narrative | Confusing and unprofessional |
+| PII visible | Legal/privacy risk |
+| Wrong client name/campaign name | Embarrassing error |
+
+**Escalation Template:**
+```
+🚨 AUDIT HALTED - CRITICAL ISSUE FOUND
+
+Issue: [Brief description]
+Location: [File:line or slide number]
+Found: [What you found]
+Expected: [What it should be]
+Impact: [Why this matters]
+
+This must be resolved before the audit can continue.
+Please review and confirm how to proceed.
+```
+
+---
+
 ### Step 5: Generate Discrepancy Report
 
 Output this structured format:
@@ -374,3 +462,226 @@ Save the audit report to:
 ```
 
 Or display inline if the user prefers immediate feedback.
+
+---
+
+## Pre-Flight Checklist: Final Sign-Off
+
+**Before approving any deliverable, every item must be checked.**
+
+This is your final gate. Do not approve until ALL boxes are checked.
+
+### Numbers & Calculations
+- [ ] Every number traced back to source data or documented calculation
+- [ ] All percentages sum to ~100% (within ±1% for rounding)
+- [ ] All sub-counts sum to stated totals
+- [ ] Denominators verified (sent vs delivered vs opened)
+- [ ] No impossible values (>100%, negative, out of scale)
+
+### Consistency
+- [ ] Same metric identical across all slides
+- [ ] Executive summary matches detail slides
+- [ ] Email content matches presentation
+- [ ] Chart values match narrative text
+- [ ] Slide references point to correct slides
+
+### Data Integrity
+- [ ] Source files exist and are current
+- [ ] File timestamps are logical (metrics not older than source)
+- [ ] Row counts match between source and report
+- [ ] No stale cached values
+
+### Charts & Visualizations
+- [ ] Every chart verified against source data
+- [ ] Axis labels correct (%, count, currency)
+- [ ] Legends match actual data series
+- [ ] No misleading scales or truncated axes
+
+### Presentation Quality
+- [ ] No PII visible
+- [ ] Client/campaign name correct throughout
+- [ ] Entity names spelled consistently
+- [ ] Recommendations match identified issues
+
+### Final Verification
+- [ ] Ran through all 11 verification checks (4.1-4.11)
+- [ ] Consistency matrix shows all ✓
+- [ ] No red flags triggered
+- [ ] All critical issues resolved
+
+**Only after ALL items are checked: APPROVE**
+
+---
+
+## Mistake Gallery: Real Examples
+
+Learn from these real-world errors that have slipped through in the past.
+
+### Type 1: Denominator Confusion
+
+**The Mistake:**
+```
+Report claims: "7.8% response rate (78 responses)"
+Calculation used: 78 / 1000 = 7.8%
+```
+
+**The Problem:**
+Only counted SMS sends (1000), forgot Email sends (1000).
+
+**The Fix:**
+```
+Correct calculation: 78 / 2000 = 3.9%
+Always verify: What's the TOTAL denominator?
+```
+
+**Detection:** Cross-reference cohort files to get true total sent.
+
+---
+
+### Type 2: Copy-Paste Slide Error
+
+**The Mistake:**
+```
+Slide 3: "NPS: +59"
+Slide 7: "NPS: +61"
+```
+
+**The Problem:**
+Slide 7 was copied from an earlier draft before NPS was recalculated.
+
+**The Fix:**
+Build consistency matrix. Search all slides for each metric.
+
+**Detection:** Grep for the metric name across all output files.
+
+---
+
+### Type 3: Stale Cached Metrics
+
+**The Mistake:**
+```
+metrics.json: {"total_responses": 78}  (Modified: Jan 5)
+survey_data.csv: 92 rows              (Modified: Jan 10)
+Report states: "78 valid responses"
+```
+
+**The Problem:**
+14 new responses came in after metrics.json was generated.
+
+**The Fix:**
+```
+ls -la *.json *.csv  # Check timestamps
+# Re-run analysis if source is newer than cache
+```
+
+**Detection:** Compare file modification times.
+
+---
+
+### Type 4: Rounding Accumulation
+
+**The Mistake:**
+```
+Promoters: 33%
+Passives: 33%
+Detractors: 33%
+Total shown: 100%
+```
+
+**The Problem:**
+Actual values: 33.33%, 33.33%, 33.33% = 99.99%
+Display rounded but claimed they sum to 100%.
+
+**The Fix:**
+Round one category up: 34% + 33% + 33% = 100%
+Or show decimals: 33.3% + 33.3% + 33.3% = 99.9%
+
+**Detection:** Manually add displayed percentages.
+
+---
+
+### Type 5: Chart-Text Mismatch
+
+**The Mistake:**
+```
+Text: "SMS outperformed Email with 4.2% response rate"
+Chart: Shows SMS bar at 3.8%, Email bar at 4.2%
+```
+
+**The Problem:**
+Text was written before chart was regenerated with corrected data.
+
+**The Fix:**
+Verify every text claim against its referenced chart.
+
+**Detection:** Read chart values, compare to narrative claims.
+
+---
+
+### Type 6: Wrong Data Column
+
+**The Mistake:**
+```
+Chart title: "Satisfaction by Channel"
+Chart shows: SMS = 4.1, Email = 4.3
+Actual data: SMS = 4.3, Email = 4.1
+```
+
+**The Problem:**
+Chart code referenced wrong columns (swapped SMS and Email).
+
+**The Fix:**
+Trace chart code to source data. Verify column names match.
+
+**Detection:** Manually extract values from source, compare to chart.
+
+---
+
+### Type 7: Scale Mismatch
+
+**The Mistake:**
+```
+Report: "Average rating: 4.6/5.0"
+Survey used: 0-10 scale
+Actual average: 8.2/10
+```
+
+**The Problem:**
+Copied rating description from template that used 5-point scale.
+
+**The Fix:**
+Verify scale from survey questions or data dictionary.
+
+**Detection:** Check for values impossible on stated scale.
+
+---
+
+### Type 8: Missing Filter
+
+**The Mistake:**
+```
+Report: "78 valid responses"
+CSV: 108 rows
+Script: df = pd.read_csv("data.csv")  # No filter!
+```
+
+**The Problem:**
+Script forgot to exclude test entries or invalid responses.
+
+**The Fix:**
+```python
+df_valid = df[df['is_test'] == False]
+df_valid = df_valid[df_valid['status'] == 'complete']
+```
+
+**Detection:** Trace from reported count back to filtering logic.
+
+---
+
+## Remember
+
+**Your job is to be the last line of defense.**
+
+Every number that reaches a client presentation passed through your audit. If a mistake gets through, it reflects on the quality of the entire analysis.
+
+Trust nothing. Verify everything. When in doubt, flag it.
