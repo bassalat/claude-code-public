@@ -14,6 +14,7 @@ A collection of custom agents and skills (slash commands) for [Claude Code](http
 
 | Skill | Description |
 |-------|-------------|
+| [`audit-sensitive`](commands/audit-sensitive.md) | Audit repository for sensitive information before pushing. Checks for emails, credentials, client names, PII, and other data that shouldn't be public. |
 | [`humanize`](commands/humanize.md) | Transform AI-generated content into natural, human-sounding text. Identifies and fixes AI patterns like overused words, uniform sentence lengths, and robotic phrasing. |
 
 ## Installation
@@ -45,6 +46,7 @@ Copy command files to your Claude Code commands directory:
 mkdir -p ~/.claude/commands
 
 # Copy command file(s)
+cp commands/audit-sensitive.md ~/.claude/commands/
 cp commands/humanize.md ~/.claude/commands/
 ```
 
@@ -70,6 +72,23 @@ The agent will:
 3. Trace each claim back to source data
 4. Verify calculations, percentages, and counts
 5. Generate a discrepancy report with severity levels
+
+### Audit Sensitive Skill
+
+Use the `/audit-sensitive` command before pushing to any remote:
+
+```
+/audit-sensitive
+```
+
+The skill scans your repository for:
+- Credentials and API keys
+- Email addresses and PII
+- Client/company names
+- File paths with usernames
+- Sensitive data in git history
+
+Run this before every push to ensure nothing sensitive leaks.
 
 ### Humanize Skill
 
